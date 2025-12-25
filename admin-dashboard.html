@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - To-Kizhoo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- Animated Background -->
+  <div class="animated-bg">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+    <div class="shape shape-4"></div>
+  </div>
+
+  <!-- Theme Toggle -->
+  <div class="theme-toggle">
+    <button class="theme-btn" id="themeToggle">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+
+  <!-- Header & Navigation -->
+  <header class="header">
+    <div class="nav-container">
+      <div class="logo">
+        <i class="fas fa-paper-plane"></i>
+        <h1>Admin Dashboard</h1>
+      </div>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link">
+          <i class="fas fa-edit"></i> Kirim Pesan
+        </a>
+        <a href="#" class="nav-link active">
+          <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+        <button id="logoutBtn" class="nav-link" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+    <p class="tagline">Panel Administrasi - Kelola Pesan</p>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    <div class="dashboard-grid">
+      <div class="stats-card">
+        <h3><i class="fas fa-chart-bar"></i> Dashboard</h3>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="adminTotalMessages">0</div>
+            <div class="stat-label">Total Pesan</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="adminUnread">0</div>
+            <div class="stat-label">Belum Dibaca</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="adminToday">0</div>
+            <div class="stat-label">Hari Ini</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="adminPhotos">0</div>
+            <div class="stat-label">Dengan Foto</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <h3><i class="fas fa-cogs"></i> Quick Actions</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <button class="action-btn secondary" id="markAllReadBtn">
+            <i class="fas fa-check-double"></i> Tandai Semua Dibaca
+          </button>
+          <button class="action-btn secondary" id="exportBtn">
+            <i class="fas fa-download"></i> Export Data
+          </button>
+          <button class="action-btn danger" id="deleteAllBtn">
+            <i class="fas fa-trash"></i> Hapus Semua
+          </button>
+          <button class="action-btn" id="refreshBtn">
+            <i class="fas fa-sync"></i> Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="admin-card">
+      <h3><i class="fas fa-search"></i> Filter Pesan</h3>
+      <div class="search-box">
+        <div class="input-with-icon" style="flex: 1;">
+          <input type="text" id="searchInput" placeholder="Cari pesan, nama, atau jenis...">
+          <i class="fas fa-search input-icon"></i>
+        </div>
+        <button class="action-btn secondary" id="searchBtn">
+          <i class="fas fa-search"></i> Cari
+        </button>
+      </div>
+      
+      <div class="filter-group">
+        <button class="filter-btn active" data-filter="all">Semua</button>
+        <button class="filter-btn" data-filter="unread">Belum Dibaca</button>
+        <button class="filter-btn" data-filter="today">Hari Ini</button>
+        <button class="filter-btn" data-filter="with-photos">Dengan Foto</button>
+        <button class="filter-btn" data-filter="private">Privat</button>
+        <select id="typeFilter" class="filter-btn" style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(100, 116, 139, 0.3);">
+          <option value="">Semua Jenis</option>
+          <option value="pesan">Pesan Biasa</option>
+          <option value="kritik">Kritik & Saran</option>
+          <option value="dukungan">Dukungan</option>
+          <option value="tanya">Pertanyaan</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Messages Table -->
+    <div class="messages-container">
+      <div class="table-header">
+        <h3><i class="fas fa-inbox"></i> Daftar Pesan</h3>
+        <div class="table-actions">
+          <button class="table-btn" id="sortDateBtn">
+            <i class="fas fa-sort-amount-down"></i> Urutkan
+          </button>
+          <button class="table-btn" id="bulkSelectBtn">
+            <i class="fas fa-check-square"></i> Pilih
+          </button>
+        </div>
+      </div>
+      
+      <div style="overflow-x: auto;">
+        <table class="messages-table">
+          <thead>
+            <tr>
+              <th width="50"><input type="checkbox" id="selectAll"></th>
+              <th width="150">Pengirim</th>
+              <th width="120">Jenis</th>
+              <th>Pesan</th>
+              <th width="150">Tanggal</th>
+              <th width="100">Status</th>
+              <th width="120">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="messagesTableBody">
+            <!-- Data akan dimuat di sini -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="pagination">
+        <button class="pagination-btn" id="prevPage">
+          <i class="fas fa-chevron-left"></i> Sebelumnya
+        </button>
+        <span class="page-info" id="pageInfo">Halaman 1 dari 1</span>
+        <button class="pagination-btn" id="nextPage">
+          Selanjutnya <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modals -->
+  <div id="messageModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-envelope"></i> Detail Pesan</h3>
+        <button class="modal-close" id="closeMessageModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="message-detail">
+          <div class="message-meta">
+            <div>
+              <strong>Pengirim:</strong> <span id="modalSender"></span><br>
+              <strong>Jenis:</strong> <span id="modalType"></span>
+            </div>
+            <div style="text-align: right;">
+              <strong>Tanggal:</strong> <span id="modalDate"></span><br>
+              <strong>Status:</strong> <span id="modalStatus"></span>
+            </div>
+          </div>
+          <div class="message-text" id="modalMessage"></div>
+          <div id="modalPhotos" class="photos-grid"></div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="action-btn secondary" id="markReadBtn">
+          <i class="fas fa-check"></i> Tandai Dibaca
+        </button>
+        <button class="action-btn danger" id="deleteMessageBtn">
+          <i class="fas fa-trash"></i> Hapus Pesan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Viewer -->
+  <div id="imageViewer" class="image-viewer">
+    <button class="image-viewer-close">
+      <i class="fas fa-times"></i>
+    </button>
+    <img id="viewerImage" src="" alt="Gambar">
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+      <div class="spinner-circle"></div>
+      <div class="spinner-circle"></div>
+      <div class="spinner-circle"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">
+    <div class="toast-content">
+      <div class="toast-icon"></div>
+      <div class="toast-message"></div>
+    </div>
+    <div class="toast-progress"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="admin-dashboard.js"></script>
+</body>
+</html>
