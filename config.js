@@ -1,8 +1,8 @@
 // ===== SUPABASE CONFIGURATION =====
 // GANTI DENGAN URL DAN KEY DARI SUPABASE ANDA!
 const SUPABASE_CONFIG = {
-  url: 'https://sdhjhqyowzvwnwhkhseg.supabase.co',
-  anonKey: 'sb_publishable_z1du_teMwE39uEa18VMEJw_8Cqb3cg8'
+  url: 'https://ttylewbnhhhsgtaijqvb.supabase.co',
+  anonKey: 'sb_publishable__dylrUDStK0yejyhVNvaKA_Uf32RZkn'
 };
 
 // ===== APP CONFIGURATION =====
