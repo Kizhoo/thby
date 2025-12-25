@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - To-Kizhoo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- Animated Background -->
+  <div class="animated-bg">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+    <div class="shape shape-4"></div>
+  </div>
+
+  <!-- Theme Toggle -->
+  <div class="theme-toggle">
+    <button class="theme-btn" id="themeToggle">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <i class="fas fa-shield-alt admin-logo"></i>
+        <h2>Admin Login</h2>
+        <p>Masuk ke panel administrasi</p>
+      </div>
+
+      <div class="form-group">
+        <label for="adminUsername">
+          <i class="fas fa-user"></i> Username
+        </label>
+        <input type="text" id="adminUsername" placeholder="Masukkan username admin">
+      </div>
+
+      <div class="form-group">
+        <label for="adminPassword">
+          <i class="fas fa-lock"></i> Password
+        </label>
+        <input type="password" id="adminPassword" placeholder="Masukkan password">
+      </div>
+
+      <div class="form-group">
+        <button id="loginBtn" class="action-btn">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+      </div>
+
+      <div style="text-align: center; margin-top: 20px;">
+        <a href="index.html" style="color: #60a5fa; text-decoration: none;">
+          <i class="fas fa-arrow-left"></i> Kembali ke Halaman Utama
+        </a>
+      </div>
+
+      <div class="submit-note">
+        <i class="fas fa-exclamation-triangle"></i> Hanya untuk admin yang berwenang
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+      <div class="spinner-circle"></div>
+      <div class="spinner-circle"></div>
+      <div class="spinner-circle"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">
+    <div class="toast-content">
+      <div class="toast-icon"></div>
+      <div class="toast-message"></div>
+    </div>
+    <div class="toast-progress"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="admin-login.js"></script>
+</body>
+</html>
