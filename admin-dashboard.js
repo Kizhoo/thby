@@ -43,11 +43,19 @@ let currentMessageId = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-  // Check authentication
+  console.log('Admin dashboard loaded');
+  
+  // STRICT AUTH CHECK - Redirect jika belum login
   if (!checkAdminAuth()) {
-    window.location.href = 'admin-login.html';
+    console.log('Not authenticated, redirecting to login');
+    showToast('Harap login terlebih dahulu', 'error');
+    setTimeout(() => {
+      window.location.href = 'admin-login.html';
+    }, 1000);
     return;
   }
+  
+  console.log('Authenticated, loading admin data...');
   
   initEventListeners();
   await loadAdminData();
@@ -55,53 +63,73 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Event Listeners
 function initEventListeners() {
+  console.log('Initializing event listeners');
+  
   // Navigation
-  logoutBtn.addEventListener('click', () => {
-    adminLogout();
-  });
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      console.log('Logout clicked');
+      adminLogout();
+    });
+  } else {
+    console.error('Logout button not found');
+  }
   
   // Actions
-  refreshBtn.addEventListener('click', loadAdminData);
-  markAllReadBtn.addEventListener('click', markAllAsRead);
-  deleteAllBtn.addEventListener('click', deleteAllMessages);
-  exportBtn.addEventListener('click', exportData);
-  searchBtn.addEventListener('click', performSearch);
-  searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') performSearch();
-  });
+  if (refreshBtn) refreshBtn.addEventListener('click', loadAdminData);
+  if (markAllReadBtn) markAllReadBtn.addEventListener('click', markAllAsRead);
+  if (deleteAllBtn) deleteAllBtn.addEventListener('click', deleteAllMessages);
+  if (exportBtn) exportBtn.addEventListener('click', exportData);
+  
+  // Search
+  if (searchBtn) searchBtn.addEventListener('click', performSearch);
+  if (searchInput) {
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') performSearch();
+    });
+  }
   
   // Filter buttons
-  filterButtons.forEach(btn => {
-    if (btn.dataset.filter) {
-      btn.addEventListener('click', () => {
-        filterButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentFilter = btn.dataset.filter;
-        currentPage = 1;
-        loadMessages();
-      });
-    }
-  });
+  if (filterButtons.length > 0) {
+    filterButtons.forEach(btn => {
+      if (btn.dataset.filter) {
+        btn.addEventListener('click', () => {
+          filterButtons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentFilter = btn.dataset.filter;
+          currentPage = 1;
+          loadMessages();
+        });
+      }
+    });
+  }
   
-  typeFilter.addEventListener('change', () => {
-    currentPage = 1;
-    loadMessages();
-  });
+  // Type filter
+  if (typeFilter) {
+    typeFilter.addEventListener('change', () => {
+      currentPage = 1;
+      loadMessages();
+    });
+  }
   
   // Pagination
-  prevPageBtn.addEventListener('click', () => {
-    if (currentPage > 1) {
-      currentPage--;
-      loadMessages();
-    }
-  });
+  if (prevPageBtn) {
+    prevPageBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        loadMessages();
+      }
+    });
+  }
   
-  nextPageBtn.addEventListener('click', () => {
-    if (currentPage < totalPages) {
-      currentPage++;
-      loadMessages();
-    }
-  });
+  if (nextPageBtn) {
+    nextPageBtn.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        loadMessages();
+      }
+    });
+  }
   
   // Select all checkbox
   if (selectAllCheckbox) {
@@ -120,17 +148,27 @@ function initEventListeners() {
   }
   
   // Modal
-  closeMessageModal.addEventListener('click', () => {
-    messageModal.classList.remove('show');
-  });
+  if (closeMessageModal) {
+    closeMessageModal.addEventListener('click', () => {
+      if (messageModal) messageModal.classList.remove('show');
+    });
+  }
   
-  markReadBtn.addEventListener('click', markCurrentMessageAsRead);
-  deleteMessageBtn.addEventListener('click', deleteCurrentMessage);
+  if (markReadBtn) {
+    markReadBtn.addEventListener('click', markCurrentMessageAsRead);
+  }
+  
+  if (deleteMessageBtn) {
+    deleteMessageBtn.addEventListener('click', deleteCurrentMessage);
+  }
   
   // Image viewer
-  document.querySelector('.image-viewer-close').addEventListener('click', () => {
-    imageViewer.classList.remove('show');
-  });
+  const imageViewerClose = document.querySelector('.image-viewer-close');
+  if (imageViewerClose) {
+    imageViewerClose.addEventListener('click', () => {
+      if (imageViewer) imageViewer.classList.remove('show');
+    });
+  }
   
   // Close modals on outside click
   window.addEventListener('click', (e) => {
@@ -145,6 +183,7 @@ function initEventListeners() {
 
 // Load admin data
 async function loadAdminData() {
+  console.log('Loading admin data...');
   await Promise.all([
     loadAdminStatistics(),
     loadMessages()
@@ -154,40 +193,69 @@ async function loadAdminData() {
 // Load admin statistics
 async function loadAdminStatistics() {
   try {
+    console.log('Loading admin statistics...');
+    
+    if (!supabase) {
+      console.error('Supabase not initialized');
+      return;
+    }
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
     // Total messages
-    const { count: total } = await supabase
+    const { count: total, error: totalError } = await supabase
       .from('messages')
       .select('*', { count: 'exact', head: true });
     
+    if (totalError) {
+      console.error('Error loading total messages:', totalError);
+    } else {
+      const totalEl = document.getElementById('adminTotalMessages');
+      if (totalEl) totalEl.textContent = total || 0;
+    }
+    
     // Unread messages
-    const { count: unread } = await supabase
+    const { count: unread, error: unreadError } = await supabase
       .from('messages')
       .select('*', { count: 'exact', head: true })
       .eq('is_read', false);
     
+    if (unreadError) {
+      console.error('Error loading unread messages:', unreadError);
+    } else {
+      const unreadEl = document.getElementById('adminUnread');
+      if (unreadEl) unreadEl.textContent = unread || 0;
+    }
+    
     // Today's messages
-    const { count: todayCount } = await supabase
+    const { count: todayCount, error: todayError } = await supabase
       .from('messages')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', today.toISOString())
       .lt('created_at', tomorrow.toISOString());
     
+    if (todayError) {
+      console.error('Error loading today messages:', todayError);
+    } else {
+      const todayEl = document.getElementById('adminToday');
+      if (todayEl) todayEl.textContent = todayCount || 0;
+    }
+    
     // Messages with photos
-    const { count: withPhotos } = await supabase
+    const { count: withPhotos, error: photosError } = await supabase
       .from('messages')
       .select('*', { count: 'exact', head: true })
       .not('photos', 'is', null);
     
-    // Update DOM
-    document.getElementById('adminTotalMessages').textContent = total || 0;
-    document.getElementById('adminUnread').textContent = unread || 0;
-    document.getElementById('adminToday').textContent = todayCount || 0;
-    document.getElementById('adminPhotos').textContent = withPhotos || 0;
+    if (photosError) {
+      console.error('Error loading messages with photos:', photosError);
+    } else {
+      const photosEl = document.getElementById('adminPhotos');
+      if (photosEl) photosEl.textContent = withPhotos || 0;
+    }
     
   } catch (error) {
     console.error('Error loading admin stats:', error);
@@ -197,9 +265,15 @@ async function loadAdminStatistics() {
 
 // Load messages
 async function loadMessages() {
+  console.log('Loading messages, page:', currentPage);
+  
   showLoading();
   
   try {
+    if (!supabase) {
+      throw new Error('Supabase not initialized');
+    }
+    
     let query = supabase
       .from('messages')
       .select('*', { count: 'exact' });
@@ -221,7 +295,7 @@ async function loadMessages() {
     }
     
     // Apply type filter
-    if (typeFilter.value) {
+    if (typeFilter && typeFilter.value) {
       query = query.eq('type', typeFilter.value);
     }
     
@@ -238,8 +312,12 @@ async function loadMessages() {
       .order('created_at', { ascending: false })
       .range(from, to);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase query error:', error);
+      throw error;
+    }
     
+    console.log('Messages loaded:', data ? data.length : 0);
     messages = data || [];
     totalPages = Math.ceil((count || 0) / APP_CONFIG.itemsPerPage);
     
@@ -256,6 +334,13 @@ async function loadMessages() {
 
 // Render messages table
 function renderMessagesTable() {
+  console.log('Rendering messages table');
+  
+  if (!messagesTableBody) {
+    console.error('Messages table body not found');
+    return;
+  }
+  
   messagesTableBody.innerHTML = '';
   selectedMessages.clear();
   
@@ -287,8 +372,8 @@ function renderMessagesTable() {
     
     row.innerHTML = `
       <td><input type="checkbox" class="message-checkbox" data-id="${msg.id}"></td>
-      <td><strong>${msg.username}</strong></td>
-      <td><span class="message-type">${getTypeLabel(msg.type)}</span></td>
+      <td><strong>${msg.username || 'Tidak diketahui'}</strong></td>
+      <td><span class="message-type">${getTypeLabel(msg.type || 'pesan')}</span></td>
       <td class="message-content">${messagePreview}</td>
       <td>${dateStr}<br><small>${timeStr}</small></td>
       <td>
@@ -296,7 +381,7 @@ function renderMessagesTable() {
           ? '<span style="color:#10b981;"><i class="fas fa-check-circle"></i> Dibaca</span>'
           : '<span style="color:#f59e0b;"><i class="fas fa-clock"></i> Baru</span>'
         }
-        ${msg.photos ? '<br><small><i class="fas fa-image"></i> Foto</small>' : ''}
+        ${msg.photos && msg.photos.length > 0 ? '<br><small><i class="fas fa-image"></i> Foto</small>' : ''}
       </td>
       <td>
         <div class="message-actions">
@@ -350,6 +435,8 @@ function renderMessagesTable() {
 }
 
 function updatePagination() {
+  if (!pageInfo || !prevPageBtn || !nextPageBtn) return;
+  
   pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`;
   prevPageBtn.disabled = currentPage === 1;
   nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
@@ -364,6 +451,8 @@ function updateSelectAllCheckbox() {
 }
 
 function performSearch() {
+  if (!searchInput) return;
+  
   searchQuery = searchInput.value.trim();
   currentPage = 1;
   loadMessages();
@@ -371,6 +460,13 @@ function performSearch() {
 
 // View message details
 function viewMessage(index) {
+  console.log('Viewing message at index:', index);
+  
+  if (!messages[index]) {
+    showToast('Pesan tidak ditemukan', 'error');
+    return;
+  }
+  
   const msg = messages[index];
   currentMessageId = msg.id;
   
@@ -388,35 +484,41 @@ function viewMessage(index) {
   });
   
   // Set modal content
-  modalSender.textContent = msg.username;
-  modalType.textContent = getTypeLabel(msg.type);
-  modalDate.textContent = `${dateStr} ${timeStr}`;
-  modalStatus.textContent = msg.is_read ? 'Sudah Dibaca' : 'Belum Dibaca';
-  modalMessage.textContent = msg.message;
+  if (modalSender) modalSender.textContent = msg.username || 'Tidak diketahui';
+  if (modalType) modalType.textContent = getTypeLabel(msg.type || 'pesan');
+  if (modalDate) modalDate.textContent = `${dateStr} ${timeStr}`;
+  if (modalStatus) modalStatus.textContent = msg.is_read ? 'Sudah Dibaca' : 'Belum Dibaca';
+  if (modalMessage) modalMessage.textContent = msg.message || '(Tidak ada pesan)';
   
   // Display photos
-  modalPhotos.innerHTML = '';
-  if (msg.photos && msg.photos.length > 0) {
-    msg.photos.forEach((photo, i) => {
-      const photoItem = document.createElement('div');
-      photoItem.className = 'photo-item';
-      photoItem.innerHTML = `<img src="${photo}" alt="Foto ${i + 1}" data-index="${i}">`;
-      modalPhotos.appendChild(photoItem);
-    });
-    
-    // Add click event to photos
-    modalPhotos.querySelectorAll('img').forEach(img => {
-      img.addEventListener('click', () => {
-        viewerImage.src = img.src;
-        imageViewer.classList.add('show');
+  if (modalPhotos) {
+    modalPhotos.innerHTML = '';
+    if (msg.photos && Array.isArray(msg.photos) && msg.photos.length > 0) {
+      msg.photos.forEach((photo, i) => {
+        if (photo && typeof photo === 'string' && photo.startsWith('data:image')) {
+          const photoItem = document.createElement('div');
+          photoItem.className = 'photo-item';
+          photoItem.innerHTML = `<img src="${photo}" alt="Foto ${i + 1}" data-index="${i}">`;
+          modalPhotos.appendChild(photoItem);
+        }
       });
-    });
+      
+      // Add click event to photos
+      modalPhotos.querySelectorAll('img').forEach(img => {
+        img.addEventListener('click', () => {
+          if (viewerImage) viewerImage.src = img.src;
+          if (imageViewer) imageViewer.classList.add('show');
+        });
+      });
+    }
   }
   
-  messageModal.classList.add('show');
+  if (messageModal) {
+    messageModal.classList.add('show');
+  }
   
   // Mark as read when viewed
-  if (!msg.is_read) {
+  if (!msg.is_read && msg.id) {
     markMessageAsRead(msg.id, false);
   }
 }
@@ -424,6 +526,8 @@ function viewMessage(index) {
 // Mark message as read
 async function markMessageAsRead(messageId, showToast = true) {
   try {
+    console.log('Marking message as read:', messageId);
+    
     const { error } = await supabase
       .from('messages')
       .update({ is_read: true })
@@ -436,7 +540,7 @@ async function markMessageAsRead(messageId, showToast = true) {
     }
     
     // Update UI
-    const row = document.querySelector(`tr[data-id="${messageId}"]`);
+    const row = document.querySelector(`tr:has(.message-checkbox[data-id="${messageId}"])`);
     if (row) {
       row.classList.remove('unread');
     }
@@ -508,7 +612,7 @@ async function deleteSingleMessage(messageId) {
 async function deleteCurrentMessage() {
   if (currentMessageId) {
     await deleteSingleMessage(currentMessageId);
-    messageModal.classList.remove('show');
+    if (messageModal) messageModal.classList.remove('show');
   }
 }
 
@@ -522,7 +626,7 @@ async function deleteAllMessages() {
     const { error } = await supabase
       .from('messages')
       .delete()
-      .gte('id', 0);
+      .gte('id', 0); // Delete all
     
     if (error) throw error;
     
@@ -547,17 +651,22 @@ async function exportData() {
     
     if (error) throw error;
     
+    if (!data || data.length === 0) {
+      showToast('Tidak ada data untuk diexport', 'warning');
+      return;
+    }
+    
     // Convert to CSV
     const headers = ['ID', 'Nama', 'Jenis', 'Pesan', 'Privasi', 'Status', 'Tanggal', 'Jumlah Foto'];
     const rows = data.map(msg => [
       msg.id,
-      `"${msg.username.replace(/"/g, '""')}"`,
-      msg.type,
-      `"${msg.message.replace(/"/g, '""')}"`,
-      msg.privacy,
+      `"${(msg.username || '').replace(/"/g, '""')}"`,
+      msg.type || 'pesan',
+      `"${(msg.message || '').replace(/"/g, '""')}"`,
+      msg.privacy || 'public',
       msg.is_read ? 'Dibaca' : 'Belum Dibaca',
       formatDate(msg.created_at),
-      msg.photos ? msg.photos.length : 0
+      msg.photos ? (Array.isArray(msg.photos) ? msg.photos.length : 0) : 0
     ]);
     
     const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
@@ -579,4 +688,4 @@ async function exportData() {
     console.error('Error exporting data:', error);
     showToast('Gagal mengexport data: ' + error.message, 'error');
   }
-}
+    }
