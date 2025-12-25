@@ -1,5 +1,5 @@
 // ===== SUPABASE CONFIGURATION =====
-// Ganti dengan URL dan Key Supabase Anda
+// GANTI DENGAN URL DAN KEY DARI SUPABASE ANDA!
 const SUPABASE_CONFIG = {
   url: 'https://sdhjhqyowzvwnwhkhseg.supabase.co',
   anonKey: 'sb_publishable_z1du_teMwE39uEa18VMEJw_8Cqb3cg8'
@@ -8,8 +8,8 @@ const SUPABASE_CONFIG = {
 // ===== APP CONFIGURATION =====
 const APP_CONFIG = {
   appName: 'To-Kizhoo',
-  adminUsername: 'Kizhoo',
-  adminPassword: 'kizhoo1602', // Ganti password ini di production!
+  adminUsername: 'admin',
+  adminPassword: 'kizhoo123', // Ganti password ini di production!
   itemsPerPage: 10,
   maxFiles: 5,
   maxFileSize: 5 * 1024 * 1024, // 5MB
@@ -20,6 +20,7 @@ const APP_CONFIG = {
 let supabase;
 try {
   supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+  console.log('Supabase initialized');
 } catch (error) {
   console.error('Gagal menginisialisasi Supabase:', error);
 }
@@ -30,7 +31,10 @@ function showToast(message, type = 'info') {
   const toastMessage = document.querySelector('.toast-message');
   const toastIcon = document.querySelector('.toast-icon');
   
-  if (!toast || !toastMessage || !toastIcon) return;
+  if (!toast || !toastMessage || !toastIcon) {
+    console.log('Toast elements not found');
+    return;
+  }
   
   toastMessage.textContent = message;
   toast.className = 'toast';
@@ -45,9 +49,14 @@ function showToast(message, type = 'info') {
   toastIcon.innerHTML = `<i class="${iconClass}"></i>`;
   
   toast.classList.add('show');
+  
+  // Auto hide after 3 seconds
   setTimeout(() => {
     toast.classList.remove('show');
   }, 3000);
+  
+  // Log to console for debugging
+  console.log(`Toast: ${type} - ${message}`);
 }
 
 function showLoading() {
@@ -64,7 +73,7 @@ function hideLoading() {
   }
 }
 
-function fileToBase64(file) {
+async function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
@@ -74,14 +83,18 @@ function fileToBase64(file) {
 }
 
 function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    return dateString;
+  }
 }
 
 function getTypeLabel(type) {
@@ -124,13 +137,24 @@ function checkAdminAuth() {
   const token = localStorage.getItem('adminToken');
   const expiry = localStorage.getItem('adminExpiry');
   
+  console.log('Checking auth:', { token, expiry });
+  
   if (!token || !expiry) {
+    console.log('No token or expiry found');
     return false;
   }
   
-  if (new Date(expiry) < new Date()) {
+  const expiryDate = new Date(expiry);
+  const now = new Date();
+  
+  console.log('Expiry date:', expiryDate);
+  console.log('Current date:', now);
+  console.log('Is expired:', expiryDate < now);
+  
+  if (expiryDate < now) {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminExpiry');
+    console.log('Token expired, removed from storage');
     return false;
   }
   
@@ -138,24 +162,47 @@ function checkAdminAuth() {
 }
 
 function adminLogin(username, password) {
+  console.log('Attempting login with:', { username, password });
+  console.log('Expected:', APP_CONFIG.adminUsername, APP_CONFIG.adminPassword);
+  
   if (username === APP_CONFIG.adminUsername && password === APP_CONFIG.adminPassword) {
-    const token = btoa(Date.now() + ':' + username);
+    const token = btoa(Date.now() + ':' + username + ':' + Math.random());
     const expiry = new Date();
     expiry.setHours(expiry.getHours() + 24);
     
     localStorage.setItem('adminToken', token);
     localStorage.setItem('adminExpiry', expiry.toISOString());
     
+    console.log('Login successful, token set:', token.substring(0, 20) + '...');
     return true;
   }
+  
+  console.log('Login failed - incorrect credentials');
   return false;
 }
 
 function adminLogout() {
+  console.log('Logging out...');
   localStorage.removeItem('adminToken');
   localStorage.removeItem('adminExpiry');
   window.location.href = 'admin-login.html';
 }
 
+// ===== VALIDATION FUNCTIONS =====
+function validateFile(file) {
+  if (!file.type.startsWith('image/')) {
+    return 'File harus berupa gambar';
+  }
+  
+  if (file.size > APP_CONFIG.maxFileSize) {
+    return `Ukuran file maksimal ${APP_CONFIG.maxFileSize / 1024 / 1024}MB`;
+  }
+  
+  return null;
+}
+
 // Initialize theme when config loads
-document.addEventListener('DOMContentLoaded', initTheme);
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Config loaded');
+  initTheme();
+});
